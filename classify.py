@@ -37,10 +37,12 @@ def pad_lists(lists):
 
     return padded_lists
 
-def set_of_file_types(ir: str) -> set:
-    my_set = {}
+def set_of_file_types(dir: str) -> set:
+    my_set = set({})
     for pokemon_folder in os.listdir(dir):
         for image in os.listdir(os.path.join(dir, pokemon_folder)):
+            if image[-4:] == "pg')":
+                print("error is here", os.path.join(dir, pokemon_folder, image))
             my_set.add(image[-4:])
     return my_set
 
@@ -58,6 +60,6 @@ def pokemon_to_df(dir: str) -> pd.DataFrame:
     test_frame = pd.DataFrame(dict(zip(pokemon_dict.keys(), equal_len_lists)))
     return test_frame
 
-pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'dataset'))
-print(pokemon_df)
+# pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'dataset'))
+# print(pokemon_df)
 print(set_of_file_types(os.path.join('Data', 'archive', 'dataset')))
