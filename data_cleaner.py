@@ -2,11 +2,15 @@ import pandas as pd
 import os
 from PIL import Image
 import numpy as np
+import cairosvg
+import io
 
-print(os.getcwd())
-print(os.listdir())
-print(os.path.join('Data', 'archive', 'dataset'))
-print(os.listdir(os.path.join('Data', 'archive', 'dataset')))
+
+
+# print(os.getcwd())
+# print(os.listdir())
+# print(os.path.join('Data', 'archive', 'dataset'))
+# print(os.listdir(os.path.join('Data', 'archive', 'dataset')))
 
 # for pokemon_folder in os.listdir(os.path.join('Data', 'archive', 'dataset')):
 #     for jpeg in os.listdir(os.path.join('Data', 'archive', 'dataset', pokemon_folder)):
@@ -25,8 +29,21 @@ print(os.listdir(os.path.join('Data', 'archive', 'dataset')))
 #     break
 
 def photo_to_np(dir: str) -> np.ndarray:
-    img = Image.open(dir)
-    return np.array(img)
+    try:
+        # Check if the file is an SVG
+        if dir.lower().endswith('.svg'):
+            # Convert SVG to PNG using cairosvg
+            svg_data = open(dir, 'rb').read()
+            png_data = cairosvg.svg2png(svg_data)
+            img = Image.open(io.BytesIO(png_data))
+        else:
+            # Open other image formats with PIL
+            img = Image.open(dir)
+        img_array = np.array(img)
+        return img_array
+    except Exception as e:
+        print(f"Error opening image: {e}")
+        return None
 
 def pad_lists(lists):
     # Find the longest list
@@ -51,15 +68,25 @@ def pokemon_to_df(dir: str) -> pd.DataFrame:
     for pokemon_folder in os.listdir(dir):
         images = []
         for jpeg in os.listdir(os.path.join(dir, pokemon_folder)):
-            # The if statement is to exclude the .svg in there
-            if jpeg[-4:] == '.jpg':
-                images.append(photo_to_np(os.path.join(dir, pokemon_folder, jpeg)))
+            images.append(photo_to_np(os.path.join(dir, pokemon_folder, jpeg)))
         pokemon_dict[pokemon_folder] = images
     
     equal_len_lists = pad_lists(pokemon_dict.values())
     test_frame = pd.DataFrame(dict(zip(pokemon_dict.keys(), equal_len_lists)))
     return test_frame
 
-# pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'dataset'))
-# print(pokemon_df)
+def df_to_csv(df: pd.DataFrame, dir: str, name: str):
+    output_directory = dir
+
+    output_filename = name + '.csv'
+
+    output_path = output_directory + '/' + output_filename
+
+    # Output the DataFrame to a CSV file in the specified directory
+    df.to_csv(output_path, index=False)
+    return None
+
+pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'dataset'))
+print(pokemon_df)
 print(set_of_file_types(os.path.join('Data', 'archive', 'dataset')))
+df_to_csv(pokemon_df, os.path.join('Data', 'csv_data'), 'pokemon1')
