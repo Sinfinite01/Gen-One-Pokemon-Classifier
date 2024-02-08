@@ -128,9 +128,6 @@ def df_to_pkl(df: pd.DataFrame, dir: str, name: str):
     return None
 
 pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'dataset'))
-print(pokemon_df)
-# print(set_of_file_types(os.path.join('Data', 'archive', 'dataset')))
-# df_to_csv(pokemon_df, os.path.join('Data', 'csv_data'), 'pokemon1')
 
 
 counter = 1
@@ -138,7 +135,6 @@ counter = 1
 while True:
     file_name = 'pokemon' + str(counter) + '.pkl'
     if file_name not in os.listdir(os.path.join('Data', 'pkl_data')):
-        # df_to_pkl(pokemon_df, os.path.join('Data', 'pkl_data'), file_name)
 
         pokemon_df.to_pickle(os.path.join('Data', 'pkl_data', file_name))
         break
