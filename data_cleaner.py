@@ -6,48 +6,13 @@ import cairosvg
 import io
 import pickle
 from torchvision import transforms
+from torch import Tensor
 
 
 
-# print(os.getcwd())
-# print(os.listdir())
-# print(os.path.join('Data', 'archive', 'dataset'))
-# print(os.listdir(os.path.join('Data', 'archive', 'dataset')))
 
-# for pokemon_folder in os.listdir(os.path.join('Data', 'archive', 'dataset')):
-#     for jpeg in os.listdir(os.path.join('Data', 'archive', 'dataset', pokemon_folder)):
-#         if jpeg[-4:] == '.jpg':
-#             img = Image.open(os.path.join('Data', 'archive', 'dataset', pokemon_folder, jpeg))
-
-#             # Print Image Info
-#             print(img.format)
-#             print(img.size)
-#             print(img.mode)
-
-#             np_img = np.array(img)
-#             print(np_img)
-#             print(type(np_img))
-#             break
-#     break
-
-def photo_to_np(dir: str) -> np.ndarray:
-    try:
-        # Check if the file is an SVG
-        if dir.lower().endswith('.svg'):
-            # Convert SVG to PNG using cairosvg
-            svg_data = open(dir, 'rb').read()
-            png_data = cairosvg.svg2png(svg_data)
-            img = Image.open(io.BytesIO(png_data))
-        else:
-            # Open other image formats with PIL
-            img = Image.open(dir)
-        img_array = np.array(img)
-        return img_array
-    except Exception as e:
-        print(f"Error opening image: {e}")
-        return None
-    
-def photo_to_tensor(dir: str, resize: bool = False, resize_num = int) -> np.ndarray:
+# Takes in a photo and returns a PyTorch Tensor
+def photo_to_tensor(dir: str, resize: bool = False, resize_num = int) -> Tensor:
     # Check if the file is an SVG
     if dir.lower().endswith('.svg'):
         # Convert SVG to PNG using cairosvg
@@ -72,7 +37,8 @@ def photo_to_tensor(dir: str, resize: bool = False, resize_num = int) -> np.ndar
     img_array = transform(img)
     return img_array
 
-def pad_lists(lists):
+# Takes in a list of lists then pads them with np.NaN so that they are all the same length
+def pad_lists(lists: list) -> list:
     # Find the longest list
     max_length = max(len(li) for li in lists)
 
@@ -81,6 +47,8 @@ def pad_lists(lists):
 
     return padded_lists
 
+# Function iterates through the original Pokemon data and creates a set 
+# of the suffixes of the file types
 def set_of_file_types(dir: str) -> set:
     my_set = set({})
     for pokemon_folder in os.listdir(dir):
@@ -90,52 +58,35 @@ def set_of_file_types(dir: str) -> set:
             my_set.add(image[-4:])
     return my_set
 
-def pokemon_to_df(dir: str) -> pd.DataFrame:
+# Takes in a directory to the Pokemon dataset, outputs a dataframe
+def pokemon_to_df(dir: str, resize_num: int=100) -> pd.DataFrame:
     pokemon_dict = {}
     for pokemon_folder in os.listdir(dir):
         images = []
         print(f"processing {pokemon_folder} images...")
         for image in os.listdir(os.path.join(dir, pokemon_folder)):
-            images.append(photo_to_tensor(os.path.join(dir, pokemon_folder, image), resize=True, resize_num=100))
+            images.append(photo_to_tensor(os.path.join(dir, pokemon_folder, image), resize=True, resize_num=resize_num))
         pokemon_dict[pokemon_folder] = images
     
     equal_len_lists = pad_lists(pokemon_dict.values())
     test_frame = pd.DataFrame(dict(zip(pokemon_dict.keys(), equal_len_lists)))
     return test_frame
 
-def df_to_csv(df: pd.DataFrame, dir: str, name: str):
-    output_directory = dir
+# Choosing the dimension to resize the images to make them all uniform
+image_size = 400
 
-    output_filename = name + '.csv'
-
-    output_path = os.path.join(output_directory, output_filename)
-
-    # Output the DataFrame to a CSV file in the specified directory
-    df.to_csv(output_path, index=False)
-    return None
-
-def df_to_pkl(df: pd.DataFrame, dir: str, name: str):
-    output_directory = dir
-
-    output_filename = name
-
-    output_path = os.path.join(output_directory, output_filename)
-
-    # Save DataFrame to a file using pickle
-    with open(output_path, 'wb') as f:
-        pickle.dump(df, f)
-
-    return None
-
-pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'dataset'))
-
+# Creating a dataframe of pytorch tensors of the pokemon images 
+pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'dataset'), resize_num = image_size)
 
 counter = 1
 
+# Create a Pickle file from the inbuilt dataframe.to_pickle() function
 while True:
-    file_name = 'pokemon' + str(counter) + '.pkl'
-    if file_name not in os.listdir(os.path.join('Data', 'pkl_data')):
+    file_name = 'pokemon' + str(image_size) + '_' + str(counter) + '.pkl'
 
+    # Check to make sure the file name doesn't already exist
+    if file_name not in os.listdir(os.path.join('Data', 'pkl_data')):
+        # Create the file and dump to it
         pokemon_df.to_pickle(os.path.join('Data', 'pkl_data', file_name))
         break
     counter += 1
