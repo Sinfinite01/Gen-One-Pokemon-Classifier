@@ -23,9 +23,13 @@ start_time = time.time()
 
 # Output the first image in the Abra column
 pil_image = None
-for image in pokemon_df['Dratini']:
+for index, row in pokemon_df.iterrows():
+    for col in pokemon_df.columns:
+        if col.startswith('pokemon_') and row[col] == 1:
+            print(f"This is a {col[8:]}")
+    image = row['tensor']
     # Print out first row of the image to get a sense of how the image is formatted
-    print(image[0])
+    print(image)
     print(type(image))
     to_pil = transforms.ToPILImage()
     pil_image = to_pil(image)
@@ -42,6 +46,9 @@ elapsed_minutes = int(elapsed_time_seconds // 60)
 elapsed_seconds = elapsed_time_seconds % 60
 
 print("Elapsed Time to output the image:", elapsed_minutes, "minutes", "{:.2f}".format(elapsed_seconds), "seconds")
+
+print("Outputting first 3 rows of the DataFrame...")
+print(pokemon_df.head(3))
 
 # I'm going to run this visualizer that reads this pickle file of the dataframe of tensors and then output the first image, lets see how long that takes
 # I'm visualizing my dataset rn. I converted it to a dataframe of pytorch tensors

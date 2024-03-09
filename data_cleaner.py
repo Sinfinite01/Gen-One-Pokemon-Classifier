@@ -23,6 +23,13 @@ def photo_to_tensor(dir: str, resize: bool = False, resize_num = int) -> Tensor:
         # Open other image formats with PIL
         img = Image.open(dir)
 
+    # Convert image to RGB if it has an alpha channel (RGBA)
+    if img.mode == 'P':
+        img = img.convert('RGBA')
+        img = img.convert('RGB')
+    elif img.mode != 'RGB':
+        img = img.convert('RGB')
+
     transform = None
     if resize:
         transform = transforms.Compose([
@@ -30,7 +37,7 @@ def photo_to_tensor(dir: str, resize: bool = False, resize_num = int) -> Tensor:
             transforms.ToTensor(),           # Convert the image to a PyTorch tensor
         ])
     else:
-            transform = transforms.Compose([
+        transform = transforms.Compose([
             transforms.ToTensor(),           # Convert the image to a PyTorch tensor
         ])
             
@@ -61,19 +68,26 @@ def set_of_file_types(dir: str) -> set:
 # Takes in a directory to the Pokemon dataset, outputs a dataframe
 def pokemon_to_df(dir: str, resize_num: int=100) -> pd.DataFrame:
     pokemon_dict = {}
+    pokemon = []
+    images = []
     for pokemon_folder in os.listdir(dir):
-        images = []
         print(f"processing {pokemon_folder} images...")
         for image in os.listdir(os.path.join(dir, pokemon_folder)):
             images.append(photo_to_tensor(os.path.join(dir, pokemon_folder, image), resize=True, resize_num=resize_num))
-        pokemon_dict[pokemon_folder] = images
+            pokemon.append(pokemon_folder)
+    pokemon_dict['pokemon'] = pokemon
+    pokemon_dict['tensor'] = images
     
+    print('Converting to a DataFrame...')
     equal_len_lists = pad_lists(pokemon_dict.values())
-    test_frame = pd.DataFrame(dict(zip(pokemon_dict.keys(), equal_len_lists)))
-    return test_frame
+    pok_frame = pd.DataFrame(dict(zip(pokemon_dict.keys(), equal_len_lists)))
+    one_hot_pok_frame = pd.get_dummies(pok_frame['pokemon'], prefix = 'pokemon')
+    pok_frame.pop('pokemon')
+    final_pok_frame = pd.concat([pok_frame, one_hot_pok_frame], axis=1)
+    return final_pok_frame
 
 # Choosing the dimension to resize the images to make them all uniform
-image_size = 400
+image_size = 100
 
 # Creating a dataframe of pytorch tensors of the pokemon images 
 pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'dataset'), resize_num = image_size)
@@ -87,6 +101,7 @@ while True:
     # Check to make sure the file name doesn't already exist
     if file_name not in os.listdir(os.path.join('Data', 'pkl_data')):
         # Create the file and dump to it
+        print('Pickle-ing DataFrame...')
         pokemon_df.to_pickle(os.path.join('Data', 'pkl_data', file_name))
         break
     counter += 1
