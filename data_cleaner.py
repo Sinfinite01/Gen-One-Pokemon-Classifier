@@ -90,7 +90,7 @@ def pokemon_to_df(dir: str, resize_num: int=100) -> pd.DataFrame:
 image_size = 100
 
 # Creating a dataframe of pytorch tensors of the pokemon images 
-pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'dataset'), resize_num = image_size)
+pokemon_df = pokemon_to_df(os.path.join('Data', 'archive', 'PokemonData'), resize_num = image_size)
 
 counter = 1
 
