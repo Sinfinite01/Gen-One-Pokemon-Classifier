@@ -4,7 +4,6 @@ from PIL import Image
 import numpy as np
 import cairosvg
 import io
-import pickle
 from torchvision import transforms
 from torch import Tensor
 
