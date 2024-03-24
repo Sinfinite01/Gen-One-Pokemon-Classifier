@@ -19,3 +19,6 @@ Welcome to our repository where we delve into the world of Pokémon classificati
     - `z`: Iterates upward if a .pth model with the same `x` and `y` already exists.
 
 Feel free to explore the provided resources and scripts to gain insights into the Pokémon classification process and experiment with the trained models!
+
+**Awards:**
+- Received 2nd Place in the "SCAI is No Limit" Artificial Intelligence competition
